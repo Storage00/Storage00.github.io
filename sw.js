@@ -2,14 +2,20 @@ const getFile = async ({ request, fallbackUrl }) => {
     const url = new URL(request.url);
     const cache = await caches.open('info');
     if (url.pathname == "/reset") {
-        caches.delete('info');
+
         return fetch('/reset.html')
     } else if (url.pathname == "/form.html" || url.pathname == "/form") {
-        caches.delete('info');
         return fetch('/form.html')
+    }else if (url.pathname.startsWith('modify.html?')) {
+        return fetch(url.pathname)
     } else {
-        try {
+        try { 
+            console.log(url.searchParams,url);
+            const query = url.searchParams
             const { user, repo, token } = await (await cache.match('/credentials')).json()
+            if (url.searchParams.size>0 && (url.searchParams.get('repo')!=repo || url.searchParams.get('user')!=user || url.searchParams.get('token')!=token)) {
+                return fetch(`modify.html?user=${(query.get('user') && url.searchParams.get('user')!=user )?query.get('user'):user}&repo=${(query.get('repo') && url.searchParams.get('repo')!=repo )?query.get('repo'):repo}&token=${(query.get('token') && url.searchParams.get('token')!=token )?query.get('token'):token}}`)
+            }
             const headers = {
                 'Accept': 'application/vnd.github.v3.raw',
                 'Authorization': `Bearer ${token}`,
